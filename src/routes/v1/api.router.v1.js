@@ -1,0 +1,21 @@
+const express = require("express")
+const router = express.Router()
+const authRouter = require("./auth/auth.router")
+const googleRouter = require("./google/google.router")
+const userRouter = require("./user/user.router")
+const followRouter = require("./follow/follow.router")
+const postRouter = require("./post/post.router")
+const commentRouter = require("./comment/comment.router")
+const reactionRouter = require("./reaction/reaction.router")
+const notificationRouter = require("./notification/notification.router")
+
+router.use("/auth", authRouter)
+router.use("/auth", googleRouter)
+router.use("/user", userRouter)
+router.use("/follow", followRouter)
+router.use("/post", postRouter)
+router.use("/comment", commentRouter)
+router.use("/reaction", reactionRouter)
+router.use("/notification", notificationRouter)
+
+module.exports = router
