@@ -3,6 +3,7 @@ const multer = require("multer")
 const memoryStorage = multer.memoryStorage()
 
 function fileFilter(req, file, callback) {
+    console.log("multer")
     const fileSize = parseInt(req.headers["content-length"])
     const threeMegabytes = 3000000
 
@@ -16,12 +17,12 @@ function fileFilter(req, file, callback) {
         file.mimetype == "image/png" ||
         file.mimetype == "image/jpg" ||
         file.mimetype == "image/jpeg" ||
-        file.mimetype == "image/webp" 
+        file.mimetype == "image/webp"
     ) {
         callback(null, true)
     } else {
         req.fileTypeError =
-            "Unsupported file type. Allowed formats: PNG, JPG, JPEG"
+            "Unsupported file type. Allowed formats: PNG, JPG, JPEG, WEBP"
 
         callback(null, false)
     }

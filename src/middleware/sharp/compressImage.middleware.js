@@ -1,27 +1,32 @@
 const sharp = require("sharp")
 
-const DEFAULT_OPTIONS = {
-    width: 300,
-    height: 300,
-    fit: "cover",
-    position: "center",
-    quality: 80,
-}
-
-const compressImage = (options) => {
-    return async (req, res, next) => {
+const compressImage = (
+    options = {
+        width: 300,
+        height: 300,
+        fit: "cover",
+        position: "center",
+        quality: 80,
+    }
+) => {
+    return async function (req, res, next) {
+        console.log("compressing image")
         try {
             const file = req.file
-            const mergedOptions = { ...DEFAULT_OPTIONS, ...options }
+            console.log("compress ", req.file)
+
+            if (!file) {
+                return next()
+            }
 
             const compressedBuffer = await sharp(file.buffer)
                 .resize({
-                    width: mergedOptions.width,
-                    height: mergedOptions.height,
-                    fit: mergedOptions.fit,
-                    position: mergedOptions.position,
+                    width: options.width,
+                    height: options.height,
+                    fit: options.fit,
+                    position: options.position,
                 })
-                .jpeg({ quality: mergedOptions.quality })
+                .jpeg({ quality: options.quality })
                 .toBuffer()
 
             req.file.buffer = compressedBuffer

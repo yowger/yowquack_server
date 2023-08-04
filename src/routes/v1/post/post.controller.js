@@ -2,6 +2,10 @@ const User = require("../../../models/user/user.schema")
 const Post = require("../../../models/post/post.schema")
 const Comment = require("../../../models/comment/comment.schema")
 const mongoose = require("mongoose")
+const cloudinary = require("../../../config/cloudinary/cloudinary.config")
+const {
+    imageBufferToDataUrl,
+} = require("../../../helpers/dataUri/dataUri.helper.js")
 
 async function getPostsQuery(req, res) {
     try {
@@ -23,18 +27,18 @@ async function getPostsQuery(req, res) {
             .limit(postsPerPage)
             .populate({
                 path: "user",
-                select: "_id name profileImage.url createdAt",
+                select: "_id name avatar.url createdAt",
             })
             .populate({
                 path: "author",
-                select: "_id name profileImage.url",
+                select: "_id name avatar.url",
             })
             .populate({
                 path: "comments",
                 select: "_id user content image.url",
                 populate: {
                     path: "user",
-                    select: "_id profileImage.url name",
+                    select: "_id avatar.url name",
                 },
                 options: {
                     sort: { createdAt: -1 },
@@ -68,7 +72,7 @@ async function getPostsAggregation(
     query,
     options = { pagination: true, postsToSkip: 0, postsPerPage: 10 }
 ) {
-    const { pagination, postsToSkip, postsPerPage } = options
+    const { postsToSkip, postsPerPage } = options
 
     const aggregationPipeline = [
         {
@@ -77,6 +81,9 @@ async function getPostsAggregation(
     ]
 
     aggregationPipeline.push(
+        {
+            $sort: { createdAt: -1 },
+        },
         {
             $lookup: {
                 from: "users",
@@ -91,7 +98,7 @@ async function getPostsAggregation(
                         $project: {
                             _id: 1,
                             name: 1,
-                            "profileImage.url": 1,
+                            "avatar.url": 1,
                         },
                     },
                 ],
@@ -112,7 +119,7 @@ async function getPostsAggregation(
                         $project: {
                             _id: 1,
                             name: 1,
-                            "profileImage.url": 1,
+                            "avatar.url": 1,
                         },
                     },
                 ],
@@ -138,21 +145,49 @@ async function getPostsAggregation(
                         },
                     },
                     {
+                        $unwind: "$user",
+                    },
+                    {
                         $project: {
                             _id: 1,
                             user: {
                                 _id: 1,
                                 name: 1,
-                                "profileImage.url": 1,
+                                "avatar.url": 1,
                             },
                             content: 1,
+                            "image.url": 1,
                             createdAt: 1,
                         },
                     },
                     { $sort: { createdAt: -1 } },
-                    { $limit: 3 },
+                    { $limit: 2 },
                 ],
                 as: "comments",
+            },
+        },
+        {
+            $lookup: {
+                from: "comments",
+                let: { postId: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ["$post", "$$postId"] },
+                        },
+                    },
+                    {
+                        $count: "totalComments",
+                    },
+                ],
+                as: "totalComments",
+            },
+        },
+        {
+            $addFields: {
+                totalComments: {
+                    $arrayElemAt: ["$totalComments.totalComments", 0],
+                },
             },
         },
         {
@@ -188,21 +223,18 @@ async function getPostsAggregation(
                 user: { $arrayElemAt: ["$user", 0] },
                 author: { $arrayElemAt: ["$author", 0] },
                 content: 1,
-                image: 1,
+                "image.url": 1,
                 reactions: 1,
                 createdAt: 1,
                 updatedAt: 1,
                 comments: 1,
+                totalComments: { $ifNull: ["$totalComments", 0] },
             },
         }
     )
 
-    if (pagination) {
-        aggregationPipeline.push(
-            { $skip: postsToSkip },
-            { $limit: postsPerPage }
-        )
-    }
+    aggregationPipeline.push({ $skip: postsToSkip }, { $limit: postsPerPage })
+
     const posts = await Post.aggregate(aggregationPipeline)
 
     return posts
@@ -212,12 +244,13 @@ async function getPosts(req, res) {
     try {
         const { id: userId } = req.params
         const { page, limit } = req.query
+        console.log("fetching ", page, limit)
         const query = userId ? { user: userId } : {}
 
         const totalPosts = await Post.countDocuments(query)
 
         const pageNumber = parseInt(page) || 1
-        const postsPerPage = parseInt(limit) || 10
+        const postsPerPage = parseInt(limit) || 5
         const postsToSkip = (pageNumber - 1) * postsPerPage
         const totalPages = Math.ceil(totalPosts / postsPerPage)
 
@@ -274,10 +307,13 @@ const getPost = async (req, res) => {
 
 async function createPost(req, res) {
     try {
+        console.log("create post")
         const { id: targetUserId } = req.params
-        const userId = "64a605a7791001feb7f25ac8"
+        const userId = "64c78606f59a5866610ae1df"
         // const userId = "64a72fd1a18010688da835cf"
         const { content } = req.body
+
+        const image = req.file
 
         let targetUser
 
@@ -291,11 +327,33 @@ async function createPost(req, res) {
             return res.status(404).json({ error: "User not found" })
         }
 
-        const newPost = new Post({
+        let newPostData = {
             user: targetUser,
             author: userId,
             content,
-        })
+        }
+
+        if (image) {
+            const imageDataUrl = imageBufferToDataUrl(image.buffer)
+
+            const options = {
+                unique_filename: true,
+                overwrite: true,
+                folder: `yow_quack/users/${targetUser}/post`,
+            }
+
+            const result = await cloudinary.uploader.upload(
+                imageDataUrl,
+                options
+            )
+
+            newPostData.image = {
+                publicId: result.public_id,
+                url: result.secure_url,
+            }
+        }
+
+        const newPost = new Post(newPostData)
 
         const createdPost = await newPost.save()
 
@@ -339,7 +397,7 @@ async function updatePost(req, res) {
             .select("_id user content image reactions createdAt updatedAt")
             .populate({
                 path: "user",
-                select: "_id name profileImage.url",
+                select: "_id name avatar.url",
             })
 
         if (!post) {
@@ -370,17 +428,46 @@ async function updatePost(req, res) {
 async function deletePost(req, res) {
     try {
         const userId = "64a605a7791001feb7f25ac8"
-        const { id: postID } = req.params
+        const { id } = req.params
+        let imagePublicIds = []
+
+        const comments = await Comment.find({ post: id }).select("image")
+
+        const commentsWithImages = comments.filter(
+            (comment) => comment.image.publicId
+        )
+
+        if (commentsWithImages.length > 0) {
+            const mappedPublicIds = commentsWithImages.map(
+                (comment) => comment.image.publicId
+            )
+            const folder = `yow_quack/comment/${id}/`
+
+            imagePublicIds = [...mappedPublicIds]
+        }
+
+        await Comment.deleteMany({ post: id })
 
         const deletedPost = await Post.findOneAndDelete({
-            _id: postID,
-            user: userId,
+            _id: id,
+            // uncomment after auth implementation
+            // user: userId,
         })
             .select("_id user content image reactions createdAt updatedAt")
             .populate({
                 path: "user",
-                select: "_id name profileImage.url",
+                select: "_id name avatar.url",
             })
+
+        if (deletedPost?.image.publicId) {
+            const postPublicId = deletedPost?.image.publicId
+
+            imagePublicIds.push(postPublicId)
+        }
+
+        if (imagePublicIds.length > 0) {
+            await cloudinary.api.delete_resources(imagePublicIds)
+        }
 
         if (!deletedPost) {
             return res.status(404).json({

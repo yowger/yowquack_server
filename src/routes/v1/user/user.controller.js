@@ -98,8 +98,7 @@ async function getUser(req, res) {
                                 follower: {
                                     _id: "$follower._id",
                                     name: "$follower.name",
-                                    "profileImage.url":
-                                        "$follower.profileImage.url",
+                                    "avatar.url": "$follower.avatar.url",
                                 },
                             },
                         },
@@ -141,8 +140,7 @@ async function getUser(req, res) {
                                 following: {
                                     _id: "$following._id",
                                     name: "$following.name",
-                                    " profileImage.url":
-                                        "$following.profileImage.url",
+                                    "avatar.url": "$following.avatar.url",
                                 },
                             },
                         },
@@ -162,7 +160,7 @@ async function getUser(req, res) {
                     _id: 1,
                     name: 1,
                     email: 1,
-                    "profileImage.url": 1,
+                    "avatar.url": 1,
                     bio: 1,
                     verified: 1,
                     createdAt: 1,
@@ -364,13 +362,12 @@ async function deleteUser(req, res) {
 
 async function uploadAvatar(req, res) {
     try {
+        console.log("uploading picture")
         // const { id: userId } = req.user
-        const userId = "64b024bdfcd9222660d27ce4"
+        // const userId = "64c78606f59a5866610ae1df"
+        // joy
+        const userId = "64cd0720c774731edee9b12c"
         const user = await User.findOne({ _id: userId }).select("_id avatar")
-        console.log(
-            "🚀 ~ file: user.controller.js:387 ~ uploadAvatar ~ user:",
-            user
-        )
 
         const image = req.file
         const imageDataUrl = imageBufferToDataUrl(image.buffer)
@@ -379,7 +376,6 @@ async function uploadAvatar(req, res) {
         let options = { unique_filename: true, overwrite: true }
 
         if (userAvatarExist) {
-            console.log("avatar exist")
             options.public_id = user.avatar.publicId
 
             const result = await cloudinary.uploader.upload(
@@ -389,7 +385,6 @@ async function uploadAvatar(req, res) {
 
             user.avatar.url = result.secure_url
         } else {
-            console.log("avatar does not exist")
             options.folder = `yow_quack/users/${user._id}/avatar`
 
             const result = await cloudinary.uploader.upload(

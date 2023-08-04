@@ -2,6 +2,10 @@ const Comment = require("../../../models/comment/comment.schema")
 const Post = require("../../../models/post/post.schema")
 const User = require("../../../models/user/user.schema")
 const Notification = require("../../../models/notification/notification.schema")
+const cloudinary = require("../../../config/cloudinary/cloudinary.config")
+const {
+    imageBufferToDataUrl,
+} = require("../../../helpers/dataUri/dataUri.helper")
 
 async function getComments(req, res) {
     try {
@@ -45,8 +49,13 @@ async function createComment(req, res) {
     try {
         const { id: postId } = req.params
         const { content } = req.body
-        const userId = "64a605a7791001feb7f25ac8"
+        const image = req.file
+
+        // const userId = "64a605a7791001feb7f25ac8"
+        const userId = "64cd0720c774731edee9b12c"
         // const userId = "64a72fd1a18010688da835cf"
+
+        res.status(200)
 
         const post = await Post.findById(postId)
 
@@ -56,11 +65,33 @@ async function createComment(req, res) {
                 .json({ success: false, message: "Post not found" })
         }
 
-        const newComment = new Comment({
+        let newCommentData = {
             post: postId,
             user: userId,
             content,
-        })
+        }
+
+        if (image) {
+            const imageDataUrl = imageBufferToDataUrl(image.buffer)
+
+            const options = {
+                unique_filename: true,
+                overwrite: true,
+                folder: `yow_quack/comment/${postId}/`,
+            }
+
+            const result = await cloudinary.uploader.upload(
+                imageDataUrl,
+                options
+            )
+
+            newCommentData.image = {
+                publicId: result.public_id,
+                url: result.secure_url,
+            }
+        }
+
+        const newComment = new Comment(newCommentData)
 
         await newComment.save()
 
@@ -141,20 +172,27 @@ async function updateComment(req, res) {
 }
 
 async function deleteComment(req, res) {
+    console.log("comment deleted")
     try {
         const { id: commentId } = req.params
         const userId = "64a605a7791001feb7f25ac8"
 
         const comment = await Comment.findOneAndDelete({
             _id: commentId,
-            user: userId,
-        })
+            // user: userId,
+        }).select("_id user post content image createdAt updatedAt")
 
         if (!comment) {
             return res.status(404).json({
                 success: false,
                 message: "Comment not found",
             })
+        }
+
+        if (comment.image && comment.image.publicId) {
+            const { publicId } = comment.image
+
+            await cloudinary.uploader.destroy(publicId)
         }
 
         await Notification.deleteOne({ commentId: commentId })

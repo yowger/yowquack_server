@@ -1,5 +1,6 @@
 const Reaction = require("../../../models/reaction/reaction.schema")
 const Post = require("../../../models/post/post.schema")
+const Notification = require("../../../models/notification/notification.schema")
 
 async function getReactions(req, res) {
     try {
@@ -31,8 +32,8 @@ async function createReaction(req, res) {
         const { type } = req.body
         // const userId = req.user._id
         // const userId = "64a72fd1a18010688da835cf"
-        // const userId = "64a605a7791001feb7f25ac8"
-        const userId = "64a8b398e0fc0396336b17b5"
+        const userId = "64a605a7791001feb7f25ac8"
+        // const userId = "64a8b398e0fc0396336b17b5"
 
         const post = await Post.findById(postId)
         if (!post) {

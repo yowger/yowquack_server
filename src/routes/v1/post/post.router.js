@@ -13,6 +13,16 @@ const mongoIdSchema = require("../../../schemas/common/mongoId.schema")
 const optionalMongoId = require("../../../schemas/common/optionalMongoId.schema")
 const createPostSchema = require("../../../schemas/post/createPost.schema")
 const updatePostSchema = require("../../../schemas/post/updatePost.schema")
+const { upload } = require("../../../middleware/multer/multer.middleware")
+const {
+    handleUploadError,
+} = require("../../../middleware/multer/handleUploadError.middleware")
+const compressImage = require("../../../middleware/sharp/compressImage.middleware")
+
+const compressOptions = {
+    width: 540,
+    quality: 80,
+}
 
 router.get(
     "/user/:id?",
@@ -23,7 +33,10 @@ router.get("/:id", validate(mongoIdSchema, { source: "params" }), getPost)
 router.post(
     "/:id?",
     validate(optionalMongoId, { source: "params" }),
-    validate(createPostSchema),
+    // validate(createPostSchema),
+    upload.single("file"),
+    handleUploadError({ allowEmptyImage: true }),
+    compressImage(compressOptions),
     createPost
 )
 router.put(

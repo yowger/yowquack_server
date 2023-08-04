@@ -27,7 +27,7 @@ router.post("/", validate(createUserSchema), createUser)
 router.post(
     "/avatar",
     upload.single("file"),
-    handleUploadError,
+    handleUploadError(),
     compressImage(),
     uploadAvatar
 )
