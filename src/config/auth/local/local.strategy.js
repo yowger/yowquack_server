@@ -4,11 +4,12 @@ const User = require("../../../models/user/user.schema")
 const localStrategy = new LocalStrategy(
     { usernameField: "email", passwordField: "password" },
     async function (email, password, done) {
+        console.log("test ", email, password)
         try {
             const user = await User.findOne({
                 email,
                 "provider.name": "regular",
-            }).lean()
+            })
 
             if (!user) {
                 return done(null, false, {

@@ -19,7 +19,7 @@ app.use(cookieParser())
 app.use(helmet())
 
 passport.use(jwtStrategy)
-passport.use(localStrategy)
+passport.use("local-login", localStrategy)
 passport.use(googleStrategy)
 
 app.use("/v1", apiRoutesV1)

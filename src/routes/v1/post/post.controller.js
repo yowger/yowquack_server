@@ -244,6 +244,7 @@ async function getPosts(req, res) {
     try {
         const { id: userId } = req.params
         const { page, limit } = req.query
+        console.log("🚀 ~ file: post.controller.js:247 ~ getPosts ~ req.query:", req.query)
         console.log("fetching ", page, limit)
         const query = userId ? { user: userId } : {}
 
@@ -258,6 +259,11 @@ async function getPosts(req, res) {
             postsToSkip,
             postsPerPage,
         })
+
+        console.log("cookie 1")
+        res.cookie("token", "sample")
+        res.cookie("token2", "sample 2", { httpOnly: true })
+        console.log("cookie 2")
 
         res.status(200).json({
             success: true,
@@ -309,8 +315,11 @@ async function createPost(req, res) {
     try {
         console.log("create post")
         const { id: targetUserId } = req.params
-        const userId = "64c78606f59a5866610ae1df"
+        // const userId = "64c78606f59a5866610ae1df"
         // const userId = "64a72fd1a18010688da835cf"
+        // const userId = "64cd180b1a2831d698a735bd"
+        // luffy
+        const userId = "64cd195dbb8b492e5c114740"
         const { content } = req.body
 
         const image = req.file

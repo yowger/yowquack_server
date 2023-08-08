@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken")
 
 function issueAccessToken(user) {
-    const { _id, username, name, roles, profileImage } = user
+    console.log("issuing access token")
+    const { _id, username, name, roles, avatar } = user
     const secretKey = process.env.JWT_SECRET
     const expiresIn = "15m"
 
@@ -11,7 +12,7 @@ function issueAccessToken(user) {
             username,
             name,
             roles,
-            avatar: profileImage.url,
+            avatar: avatar.url,
         },
     }
 
@@ -23,6 +24,7 @@ function issueAccessToken(user) {
 }
 
 function verifyAccessToken(accessToken) {
+    console.log("issuing verify token")
     try {
         const secretKey = process.env.JWT_SECRET
         const decodedToken = jwt.verify(accessToken, secretKey)

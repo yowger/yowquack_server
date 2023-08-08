@@ -44,4 +44,5 @@ const googleStrategy = new GoogleStrategy(
     },
     registerGoogleUser
 )
+
 module.exports = googleStrategy

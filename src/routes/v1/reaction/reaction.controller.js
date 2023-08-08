@@ -32,8 +32,12 @@ async function createReaction(req, res) {
         const { type } = req.body
         // const userId = req.user._id
         // const userId = "64a72fd1a18010688da835cf"
-        const userId = "64a605a7791001feb7f25ac8"
+        // const userId = "64a605a7791001feb7f25ac8"
         // const userId = "64a8b398e0fc0396336b17b5"
+        // Roger
+        // const userId = "64cd180b1a2831d698a735bd"
+        // luffy
+        const userId = "64cd195dbb8b492e5c114740"
 
         const post = await Post.findById(postId)
         if (!post) {

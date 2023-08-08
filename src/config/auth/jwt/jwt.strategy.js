@@ -8,6 +8,7 @@ const jwtStrategy = new JwtStrategy(
         secretOrKey: process.env.JWT_SECRET,
     },
     async function (jwtPayload, done) {
+        console.log("jwt ")
         try {
             const user = jwtPayload.user
 

@@ -17,19 +17,24 @@ function httpLoginUser(req, res) {
 
         const refreshToken = issueRefreshToken(userId)
 
+        res.cookie("token", "sample")
+
         res.cookie("jwt", refreshToken, cookieConfig)
 
         res.status(200).json({
             accessToken,
         })
     } catch (error) {
+        console.log("failed to login, error: ", error)
         return res.status(401).json({ message: "failed to login" })
     }
 }
 
 async function httpRefreshToken(req, res) {
     try {
+        console.log("refresh token")
         const cookies = req.cookies
+
         const noJwtCookie = !cookies?.jwt
 
         if (noJwtCookie) {
@@ -43,7 +48,7 @@ async function httpRefreshToken(req, res) {
 
             const userId = decodedJwt.userId
 
-            const userExists = await findUser({ _id: userId })
+            const userExists = await User.findById(userId).lean()
 
             if (!userExists) {
                 return res.sendStatus(401)

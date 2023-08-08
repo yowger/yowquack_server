@@ -196,6 +196,7 @@ async function getUser(req, res) {
 }
 
 async function createUser(req, res) {
+    console.log("req, ", req.body)
     try {
         const { name, email, password } = req.body
 
@@ -366,7 +367,8 @@ async function uploadAvatar(req, res) {
         // const { id: userId } = req.user
         // const userId = "64c78606f59a5866610ae1df"
         // joy
-        const userId = "64cd0720c774731edee9b12c"
+        // const userId = "64cd0720c774731edee9b12c"
+        const userId = "64cd195dbb8b492e5c114740"
         const user = await User.findOne({ _id: userId }).select("_id avatar")
 
         const image = req.file

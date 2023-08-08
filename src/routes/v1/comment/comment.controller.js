@@ -52,8 +52,14 @@ async function createComment(req, res) {
         const image = req.file
 
         // const userId = "64a605a7791001feb7f25ac8"
-        const userId = "64cd0720c774731edee9b12c"
+        // const userId = "64cd0720c774731edee9b12c"
         // const userId = "64a72fd1a18010688da835cf"
+        // remi
+        // const userId = "64c78606f59a5866610ae1df"
+        // Roger
+        // const userId = "64cd180b1a2831d698a735bd"
+        // luffy
+        const userId = "64cd195dbb8b492e5c114740"
 
         res.status(200)
 

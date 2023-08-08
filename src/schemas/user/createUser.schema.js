@@ -1,10 +1,10 @@
 const Joi = require("joi")
 
-const passwordFormat = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[\S]{5,}$/
-// Password must be at least 5 characters long and include at least one uppercase letter, one lowercase letter, and one number.
+const passwordFormat = /^(?=.*[a-z])(?=.*[A-Z])/
+// Password must contain at least one uppercase letter
 
 const specialCharsFormat = /^[-@.\w]*$/
-// Password cannot contain any special characters except for underscore (_), at (@), period (.), and hyphen (-)
+// Password cannot contain special characters other than _ @ . -
 
 const createUserSchema = Joi.object().keys({
     name: Joi.string().trim().min(2).max(30).required(),
